@@ -21,3 +21,9 @@ npm install
 ```
 node index.js [User ID] [User Password]
 ```
+
+or
+
+```
+Edit the batch file and execute
+```
