@@ -5,6 +5,7 @@ skku gls on windows (command line)
 ## Required
 
 git: https://git-scm.com/downloads
+
 node.js: https://nodejs.org
 
 ## Install
