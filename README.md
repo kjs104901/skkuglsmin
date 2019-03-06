@@ -4,6 +4,8 @@ skku gls on windows (command line)
 
 ## Required
 
+MiPlatform: Auto-installed when launch GLS on IE browser
+
 git: https://git-scm.com/downloads
 
 node.js: https://nodejs.org
