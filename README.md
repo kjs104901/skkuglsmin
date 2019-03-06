@@ -2,7 +2,7 @@
 
 skku gls on windows (command line)
 
-## Required
+## Requirements
 
 MiPlatform: Auto-installed when launch GLS on IE browser
 
