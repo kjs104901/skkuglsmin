@@ -1,0 +1,11 @@
+{
+  "name": "skkuglsmin",
+  "version": "1.0.0",
+  "description": "skku gls on windows (command line)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
