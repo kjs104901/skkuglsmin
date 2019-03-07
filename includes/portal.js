@@ -56,85 +56,69 @@ exports.login = async (userId, userPwd) => {
         .then(handleLoginResult);
 };
 
-exports.loginCheck = (callback) => {
+exports.loginCheck = () => {
     const loginCheckURL = "https://eportal.skku.edu/wps/portal";
 
-    request({
+    return requestAsync({
             url: loginCheckURL,
             headers: crawler.getNormalHeader(),
             method: "GET",
             followAllRedirects: true,
             jar: crawler.getCookieJar()
-        },
-        (error, response, body) => {
-            if (error) {
-                callback(false);
-            } else if (response.statusCode !== 200) {
-                callback(false);
-            } else {
-                if (-1 < body.indexOf("user_kor_name")) {
-                    callback(true);
-                } else {
-                    callback(false);
-                }
-            }
-        }
-    );
+        })
+        .then(response => {
+            return (response.statusCode == 200) && (-1 < response.body.indexOf("user_kor_name"));
+        })
 };
 
-exports.getGlobalVal = (callback) => {
+exports.getGlobalVal = () => {
     const GLSURL = "https://eportal.skku.edu/wps/myinfo/glsCall.jsp";
-    request({
+    return requestAsync({
             url: GLSURL,
             headers: crawler.getNormalHeader(),
             method: "GET",
             jar: crawler.getCookieJar()
-        },
-        getGlobalValCallback
-    );
+        })
+        .then(getGlobalValCallback)
+        .then(getGlobalValFinalCallback)
 
-    function getGlobalValCallback(error, response, body) {
-        if (error) {
-            callback("");
-        } else if (response.statusCode !== 200) {
-            callback("");
-        } else {
-            crawler.setTargetStr(body);
-            crawler.moveTargetAfter('name="method"');
-            const method = crawler.getBetween('value="', '"');
-            crawler.moveTargetAfter('name="param"');
-            const param = crawler.getBetween('value="', '"');
-
-            const getGlobalValFinalURL = "https://admin.skku.edu/co/COCOUsrLoginAction.do";
-            const getGlobalValFinalForm = {
-                method: method,
-                param: param
-            };
-
-            request({
-                    url: getGlobalValFinalURL,
-                    headers: crawler.getNormalHeader(),
-                    form: getGlobalValFinalForm,
-                    method: "POST",
-                    jar: crawler.getCookieJar()
-                },
-                getGlobalValFinalCallback
-            );
+    async function getGlobalValCallback(response) {
+        if (response.statusCode !== 200) {
+            throw "";
         }
+
+        crawler.setTargetStr(response.body);
+        crawler.moveTargetAfter('name="method"');
+        const method = crawler.getBetween('value="', '"');
+        crawler.moveTargetAfter('name="param"');
+        const param = crawler.getBetween('value="', '"');
+
+        const getGlobalValFinalURL = "https://admin.skku.edu/co/COCOUsrLoginAction.do";
+        const getGlobalValFinalForm = {
+            method: method,
+            param: param
+        };
+
+        return await requestAsync({
+            url: getGlobalValFinalURL,
+            headers: crawler.getNormalHeader(),
+            form: getGlobalValFinalForm,
+            method: "POST",
+            jar: crawler.getCookieJar()
+        });
+
     }
 
-    function getGlobalValFinalCallback(error, response, body) {
-        if (error) {
-            callback("");
-        } else if (response.statusCode !== 200) {
-            callback("");
+    function getGlobalValFinalCallback(response) {
+        if (response.statusCode !== 200) {
+            return "";
         } else {
-            crawler.setTargetStr(body);
+            crawler.setTargetStr(response.body);
             globalVal = crawler.getBetweenMoveTarget('MiInstaller.GlobalVal = "', '"');
             if (0 < globalVal.length) {
-                callback(globalVal);
+                return globalVal;
             } else {
-                callback("");
+                return "";
             }
         }
     }

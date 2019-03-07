@@ -16,31 +16,29 @@ const userId = process.argv[2];
 const userPass = process.argv[3];
 
 portal.login(userId, userPass)
-    .then(result => {
-        if (result) {
-            portal.getGlobalVal((globalVal) => {
-                if (globalVal.length > 0) {
-                    gls.setGlobalVal(globalVal, (result) => {
+    .then(async result => {
+        if (!result) throw false;
+        return await portal.getGlobalVal();
+    })
+    .then(globalVal => {
+        if (globalVal.length > 0) {
+            gls.setGlobalVal(globalVal, (result) => {
+                if (result) {
+                    gls.executeGLS((result) => {
                         if (result) {
-                            gls.executeGLS((result) => {
-                                if (result) {
-                                    console.log("Success");
-                                } else {
-                                    console.error("[Error] GLS - failed");
-                                }
-                            })
+                            console.log("Success");
                         } else {
-                            console.error("[Error] Regedit - failed");
+                            console.error("[Error] GLS - failed");
                         }
-                    });
+                    })
                 } else {
-                    console.error("[Error] GlobalVal - missing");
+                    console.error("[Error] Regedit - failed");
                 }
             });
         } else {
-            console.error("[Error] Login - failed");
+            console.error("[Error] GlobalVal - missing");
         }
     })
     .catch(err => {
-        console.log(err);
+        console.error("[Error] Login - failed");
     })
