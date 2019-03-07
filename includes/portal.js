@@ -42,7 +42,7 @@ exports.login = async (userId, userPwd) => {
         } else if (-1 < response.body.indexOf('location.href = "https://eportal.skku.edu/wps/portal"')) {
             return true;
         } else {
-            return false;
+            throw false;
         }
     }
 
@@ -67,7 +67,10 @@ exports.loginCheck = () => {
             jar: crawler.getCookieJar()
         })
         .then(response => {
-            return (response.statusCode == 200) && (-1 < response.body.indexOf("user_kor_name"));
+            if ((response.statusCode == 200) && (-1 < response.body.indexOf("user_kor_name")))
+                return true;
+            else
+                throw false;
         })
 };
 
@@ -111,14 +114,14 @@ exports.getGlobalVal = () => {
 
     function getGlobalValFinalCallback(response) {
         if (response.statusCode !== 200) {
-            return "";
+            throw "";
         } else {
             crawler.setTargetStr(response.body);
             globalVal = crawler.getBetweenMoveTarget('MiInstaller.GlobalVal = "', '"');
             if (0 < globalVal.length) {
                 return globalVal;
             } else {
-                return "";
+                throw "";
             }
         }
     }

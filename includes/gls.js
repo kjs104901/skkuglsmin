@@ -1,8 +1,9 @@
 const regedit = require('regedit');
 const executor = require('child_process').execFile;
+const util = require('util');
 var fs = require('fs');
 
-const ComponentPath =  process.env.APPDATA.split('AppData')[0] + "AppData\\LocalLow\\TOBESOFT\\SKKU\\components\\";
+const ComponentPath = process.env.APPDATA.split('AppData')[0] + "AppData\\LocalLow\\TOBESOFT\\SKKU\\components\\";
 const Resource = ComponentPath + "resource.xml";
 const StartImage = ComponentPath + "next_start.gif";
 const iconImage = ComponentPath + "icon_next.ico";
@@ -21,15 +22,17 @@ const Retry = 0;
 const StartXML = "http://admin.skku.edu/co/mp/start.xml";
 const UpdateURL = "http://admin.skku.edu/co/jsp/installer/Miplatform320U_20151207/update_vista_config.xml";
 
-const executeFile =  process.env.APPDATA.split('AppData')[0] + "AppData\\Local\\TOBESOFT\\MiPlatform320U\\MiPlatform320U.exe";
+const executeFile = process.env.APPDATA.split('AppData')[0] + "AppData\\Local\\TOBESOFT\\MiPlatform320U\\MiPlatform320U.exe";
 const parametersStr = "-K skku -X 'http://admin.skku.edu/co/mp/start.xml' -Wd 1024 -Ht 784";
 const parameters = parametersStr.split(" ");
 
 let GlobalVal = "";
 
-exports.setGlobalVal = (gStr, callback) => {
+exports.setGlobalVal = (gStr) => {
+    const createKeyAsync = util.promisify(regedit.createKey);
+    const putValueAsync = util.promisify(regedit.putValue);
     GlobalVal = gStr;
-    
+
     var valuesToPut = {
         'HKCU\\Software\\AppDataLow\\Software\\TOBESOFT\\MiPlatform320U\\skku': {
             'ComponentPath': {
@@ -75,21 +78,10 @@ exports.setGlobalVal = (gStr, callback) => {
         }
     }
 
-    regedit.createKey(['HKCU\\Software\\AppDataLow\\Software\\TOBESOFT\\MiPlatform320U\\skku'], (err)=>{
-        if (err) {
-            callback(false)
-        }
-        else {
-            regedit.putValue(valuesToPut, function(err) {
-                if (err) {
-                    callback(false);
-                }
-                else {
-                    callback(true);
-                }
-            });
-        }
-    });
+    return createKeyAsync(['HKCU\\Software\\AppDataLow\\Software\\TOBESOFT\\MiPlatform320U\\skku'])
+        .then(() => putValueAsync(valuesToPut))
+        .then(() => true)
+
 };
 
 exports.setImage = () => {
@@ -103,13 +95,7 @@ exports.checkInstalled = () => {
     return fs.existsSync(executeFile);
 }
 
-exports.executeGLS = (callback) => {
-    executor(executeFile, parameters, (err, data) => {
-        if (err) {
-            callback(false);
-        }
-        else {
-            callback(true);
-        }
-    });
+exports.executeGLS = () => {
+    const excutorAsync = util.promisify(executor);
+    return excutorAsync(executeFile, parameters);
 };
