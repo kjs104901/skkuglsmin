@@ -1,6 +1,6 @@
 # skkuglsmin
 
-skku gls on windows (command line)
+skku GLS launcher for windows (command line)
 
 ## Requirements
 
