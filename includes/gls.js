@@ -81,6 +81,10 @@ exports.setGlobalVal = (gStr) => {
     return createKeyAsync(['HKCU\\Software\\AppDataLow\\Software\\TOBESOFT\\MiPlatform320U\\skku'])
         .then(() => putValueAsync(valuesToPut))
         .then(() => true)
+        .catch(err => {
+            console.log("Regedit Failed");
+            throw err;
+        })
 
 };
 

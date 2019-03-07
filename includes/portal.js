@@ -9,7 +9,7 @@ exports.login = async (userId, userPwd) => {
 
     async function postLoginFormWith(response) {
         if (response.statusCode !== 200) {
-            throw false;
+            throw "Login Failed";
         }
         crawler.setTargetStr(response.body);
         crawler.moveTargetAfter("loginContainer");
@@ -33,7 +33,7 @@ exports.login = async (userId, userPwd) => {
 
     async function handleLoginResult(response) {
         if (response.statusCode !== 200) {
-            throw false;
+            throw "Login Failed";
         }
         crawler.setTargetStr(response.body);
         studentName = crawler.getBetween('user_kor_name = "', '"');
@@ -42,7 +42,7 @@ exports.login = async (userId, userPwd) => {
         } else if (-1 < response.body.indexOf('location.href = "https://eportal.skku.edu/wps/portal"')) {
             return true;
         } else {
-            throw false;
+            throw "Login Failed";
         }
     }
 
@@ -70,7 +70,7 @@ exports.loginCheck = () => {
             if ((response.statusCode == 200) && (-1 < response.body.indexOf("user_kor_name")))
                 return true;
             else
-                throw false;
+                throw "Login Failed";
         })
 };
 
@@ -87,7 +87,7 @@ exports.getGlobalVal = () => {
 
     async function getGlobalValCallback(response) {
         if (response.statusCode !== 200) {
-            throw "";
+            throw "Login Failed";
         }
 
         crawler.setTargetStr(response.body);
@@ -114,14 +114,14 @@ exports.getGlobalVal = () => {
 
     function getGlobalValFinalCallback(response) {
         if (response.statusCode !== 200) {
-            throw "";
+            throw "Login Failed";
         } else {
             crawler.setTargetStr(response.body);
             globalVal = crawler.getBetweenMoveTarget('MiInstaller.GlobalVal = "', '"');
             if (0 < globalVal.length) {
                 return globalVal;
             } else {
-                throw "";
+                throw "Login Failed";
             }
         }
     }
