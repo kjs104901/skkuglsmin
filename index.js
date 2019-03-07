@@ -15,32 +15,32 @@ gls.setImage();
 const userId = process.argv[2];
 const userPass = process.argv[3];
 
-portal.login(userId, userPass, (result) => {
-    if (result) {
-        portal.getGlobalVal((globalVal) => {
-            if (globalVal.length > 0) {
-                gls.setGlobalVal(globalVal, (result) => {
-                    if (result) {
-                        gls.executeGLS((result) => {
-                            if (result) {
-                                console.log("Success");
-                            }
-                            else {
-                                console.error("[Error] GLS - failed");
-                            }
-                        })
-                    }
-                    else {
-                        console.error("[Error] Regedit - failed");
-                    }
-                });
-            }
-            else {
-                console.error("[Error] GlobalVal - missing");
-            }
-        });
-    }
-    else {
-        console.error("[Error] Login - failed");
-    }
-});
+portal.login(userId, userPass)
+    .then(result => {
+        if (result) {
+            portal.getGlobalVal((globalVal) => {
+                if (globalVal.length > 0) {
+                    gls.setGlobalVal(globalVal, (result) => {
+                        if (result) {
+                            gls.executeGLS((result) => {
+                                if (result) {
+                                    console.log("Success");
+                                } else {
+                                    console.error("[Error] GLS - failed");
+                                }
+                            })
+                        } else {
+                            console.error("[Error] Regedit - failed");
+                        }
+                    });
+                } else {
+                    console.error("[Error] GlobalVal - missing");
+                }
+            });
+        } else {
+            console.error("[Error] Login - failed");
+        }
+    })
+    .catch(err => {
+        console.log(err);
+    })

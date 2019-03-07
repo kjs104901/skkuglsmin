@@ -1,79 +1,65 @@
 const request = require('request');
 const crawler = require('./crawler');
+const util = require('util');
 
-exports.login = (userId, userPwd, callback) => {
+const requestAsync = util.promisify(request);
+
+exports.login = async (userId, userPwd) => {
     const mainURL = "https://eportal.skku.edu/wps/portal/";
 
-    request(
-        {
+    async function postLoginFormWith(response) {
+        if (response.statusCode !== 200) {
+            throw false;
+        }
+        crawler.setTargetStr(response.body);
+        crawler.moveTargetAfter("loginContainer");
+        const loginURL = "https://eportal.skku.edu" + crawler.getBetween('action="', '"');
+        const loginForm = {
+            lang: "ko",
+            saveid: "on",
+            userid: userId,
+            password: userPwd
+        };
+
+        return await requestAsync({
+            url: loginURL,
+            headers: crawler.getNormalHeader(),
+            method: "POST",
+            form: loginForm,
+            followAllRedirects: true,
+            jar: crawler.getCookieJar()
+        })
+    }
+
+    async function handleLoginResult(response) {
+        if (response.statusCode !== 200) {
+            throw false;
+        }
+        crawler.setTargetStr(response.body);
+        studentName = crawler.getBetween('user_kor_name = "', '"');
+        if (-1 < response.body.indexOf("user_kor_name")) {
+            return true;
+        } else if (-1 < response.body.indexOf('location.href = "https://eportal.skku.edu/wps/portal"')) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    return await requestAsync({
             url: mainURL,
             headers: crawler.getNormalHeader(),
             method: "GET",
             jar: crawler.getCookieJar()
-        },
-        mainCallback
-    );
-
-    function mainCallback(error, response, body) {
-        if (error) {
-            callback(false);
-        }
-        else if (response.statusCode !== 200) {
-            callback(false);
-        }
-        else {
-            crawler.setTargetStr(body);
-            crawler.moveTargetAfter("loginContainer");
-            const loginURL = "https://eportal.skku.edu" + crawler.getBetween('action="', '"');
-            const loginForm = {
-                lang: "ko",
-                saveid: "on",
-                userid: userId,
-                password: userPwd
-            };
-
-            request(
-                {
-                    url: loginURL,
-                    headers: crawler.getNormalHeader(),
-                    method: "POST",
-                    form: loginForm,
-                    followAllRedirects: true,
-                    jar: crawler.getCookieJar()
-                },
-                loginCallback
-            )
-        }
-    }
-
-    function loginCallback(error, response, body) {
-        if (error) {
-            callback(false);
-        }
-        else if (response.statusCode !== 200) {
-            callback(false);
-        }
-        else {
-            crawler.setTargetStr(body);
-            studentName = crawler.getBetween('user_kor_name = "', '"');
-            if (-1 < body.indexOf("user_kor_name")) {
-                callback(true);
-            }
-            else if (-1 < body.indexOf('location.href = "https://eportal.skku.edu/wps/portal"')) {
-                callback(true);
-            }
-            else {
-                callback(false);
-            }
-        }
-    }
+        })
+        .then(postLoginFormWith)
+        .then(handleLoginResult);
 };
 
 exports.loginCheck = (callback) => {
     const loginCheckURL = "https://eportal.skku.edu/wps/portal";
 
-    request(
-        {
+    request({
             url: loginCheckURL,
             headers: crawler.getNormalHeader(),
             method: "GET",
@@ -83,15 +69,12 @@ exports.loginCheck = (callback) => {
         (error, response, body) => {
             if (error) {
                 callback(false);
-            }
-            else if (response.statusCode !== 200) {
+            } else if (response.statusCode !== 200) {
                 callback(false);
-            }
-            else {
+            } else {
                 if (-1 < body.indexOf("user_kor_name")) {
                     callback(true);
-                }
-                else {
+                } else {
                     callback(false);
                 }
             }
@@ -101,8 +84,7 @@ exports.loginCheck = (callback) => {
 
 exports.getGlobalVal = (callback) => {
     const GLSURL = "https://eportal.skku.edu/wps/myinfo/glsCall.jsp";
-    request(
-        {
+    request({
             url: GLSURL,
             headers: crawler.getNormalHeader(),
             method: "GET",
@@ -114,11 +96,9 @@ exports.getGlobalVal = (callback) => {
     function getGlobalValCallback(error, response, body) {
         if (error) {
             callback("");
-        }
-        else if (response.statusCode !== 200) {
+        } else if (response.statusCode !== 200) {
             callback("");
-        }
-        else {
+        } else {
             crawler.setTargetStr(body);
             crawler.moveTargetAfter('name="method"');
             const method = crawler.getBetween('value="', '"');
@@ -131,8 +111,7 @@ exports.getGlobalVal = (callback) => {
                 param: param
             };
 
-            request(
-                {
+            request({
                     url: getGlobalValFinalURL,
                     headers: crawler.getNormalHeader(),
                     form: getGlobalValFinalForm,
@@ -147,17 +126,14 @@ exports.getGlobalVal = (callback) => {
     function getGlobalValFinalCallback(error, response, body) {
         if (error) {
             callback("");
-        }
-        else if (response.statusCode !== 200) {
+        } else if (response.statusCode !== 200) {
             callback("");
-        }
-        else {
+        } else {
             crawler.setTargetStr(body);
             globalVal = crawler.getBetweenMoveTarget('MiInstaller.GlobalVal = "', '"');
             if (0 < globalVal.length) {
                 callback(globalVal);
-            }
-            else {
+            } else {
                 callback("");
             }
         }
